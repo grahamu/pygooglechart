@@ -20,25 +20,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# unnecessary on Python3, but harmless
-from __future__ import division
-
-import os
-import math
-import random
 import re
 import warnings
-import copy
 
-try:
-    # we're on Python3
-    from urllib.request import urlopen
-    from urllib.parse import quote
-
-except ImportError:
-    # we're on Python2.x
-    from urllib2 import urlopen
-    from urllib import quote
+from urllib.request import urlopen
+from urllib.parse import quote
 
 
 # Helper variables and functions
@@ -49,11 +35,13 @@ __author__ = 'Gerald Kaszuba'
 
 reo_colour = re.compile('^([A-Fa-f0-9]{2,2}){3,4}$')
 
+
 def _check_colour(colour):
     if not reo_colour.match(colour):
-        raise InvalidParametersException('Colours need to be in ' \
-            'RRGGBB or RRGGBBAA format. One of your colours has %s' % \
-            colour)
+        raise InvalidParametersException(
+            'Colours need to be in '
+            'RRGGBB or RRGGBBAA format. One of your colours has %s' % colour
+        )
 
 
 def _reset_warnings():
@@ -96,15 +84,16 @@ class AbstractClassException(PyGoogleChartException):
 class UnknownChartType(PyGoogleChartException):
     pass
 
+
 class UnknownCountryCodeException(PyGoogleChartException):
     pass
+
 
 # Data Classes
 # -----------------------------------------------------------------------------
 
 
 class Data(object):
-
     def __init__(self, data):
         if type(self) == Data:
             raise AbstractClassException('This is an abstract class')
@@ -113,7 +102,7 @@ class Data(object):
     @classmethod
     def float_scale_value(cls, value, range):
         lower, upper = range
-        assert(upper > lower)
+        assert upper > lower
         scaled = (value - lower) * (cls.max_value / (upper - lower))
         return scaled
 
@@ -135,8 +124,9 @@ class Data(object):
     @staticmethod
     def check_clip(scaled, clipped):
         if clipped != scaled:
-            warnings.warn('One or more of of your data points has been '
-                'clipped because it is out of range.')
+            warnings.warn(
+                'One or more of of your data points has been ' 'clipped because it is out of range.'
+            )
 
 
 class SimpleData(Data):
@@ -154,8 +144,7 @@ class SimpleData(Data):
                 elif value >= 0 and value <= self.max_value:
                     sub_data.append(SimpleData.enc_map[value])
                 else:
-                    raise DataOutOfRangeException('cannot encode value: %d'
-                                                  % value)
+                    raise DataOutOfRangeException('cannot encode value: %d' % value)
             encoded_data.append(''.join(sub_data))
         return 'chd=s:' + ','.join(encoded_data)
 
@@ -191,8 +180,7 @@ class TextData(Data):
 class ExtendedData(Data):
 
     max_value = 4095
-    enc_map = \
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.'
+    enc_map = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.'
 
     def __repr__(self):
         encoded_data = []
@@ -204,13 +192,13 @@ class ExtendedData(Data):
                     sub_data.append('__')
                 elif value >= 0 and value <= self.max_value:
                     first, second = divmod(int(value), enc_size)
-                    sub_data.append('%s%s' % (
-                        ExtendedData.enc_map[first],
-                        ExtendedData.enc_map[second]))
+                    sub_data.append(
+                        '%s%s' % (ExtendedData.enc_map[first], ExtendedData.enc_map[second])
+                    )
                 else:
-                    raise DataOutOfRangeException( \
-                        'Item #%i "%s" is out of range' % (data.index(value), \
-                        value))
+                    raise DataOutOfRangeException(
+                        'Item #%i "%s" is out of range' % (data.index(value), value)
+                    )
             encoded_data.append(''.join(sub_data))
         return 'chd=e:' + ','.join(encoded_data)
 
@@ -228,7 +216,7 @@ class Axis(object):
     TYPES = (BOTTOM, TOP, LEFT, RIGHT)
 
     def __init__(self, axis_index, axis_type, **kw):
-        assert(axis_type in Axis.TYPES)
+        assert axis_type in Axis.TYPES
         self.has_style = False
         self.axis_index = axis_index
         self.axis_type = axis_type
@@ -265,7 +253,6 @@ class Axis(object):
 
 
 class LabelAxis(Axis):
-
     def __init__(self, axis_index, axis_type, values, **kwargs):
         Axis.__init__(self, axis_index, axis_type, **kwargs)
         self.values = [str(a) for a in values]
@@ -275,7 +262,6 @@ class LabelAxis(Axis):
 
 
 class RangeAxis(Axis):
-
     def __init__(self, axis_index, axis_type, low, high, **kwargs):
         Axis.__init__(self, axis_index, axis_type, **kwargs)
         self.low = low
@@ -283,6 +269,7 @@ class RangeAxis(Axis):
 
     def __repr__(self):
         return '%i,%s,%s' % (self.axis_index, self.low, self.high)
+
 
 # Chart Classes
 # -----------------------------------------------------------------------------
@@ -304,13 +291,22 @@ class Chart(object):
     LINEAR_GRADIENT = 'lg'
     LINEAR_STRIPES = 'ls'
 
-    def __init__(self, width, height, title=None, legend=None, colours=None,
-            auto_scale=True, x_range=None, y_range=None,
-            colours_within_series=None):
+    def __init__(
+        self,
+        width,
+        height,
+        title=None,
+        legend=None,
+        colours=None,
+        auto_scale=True,
+        x_range=None,
+        y_range=None,
+        colours_within_series=None,
+    ):
         if type(self) == Chart:
             raise AbstractClassException('This is an abstract class')
-        assert(isinstance(width, int))
-        assert(isinstance(height, int))
+        assert isinstance(width, int)
+        assert isinstance(height, int)
         self.width = width
         self.height = height
         self.data = []
@@ -348,10 +344,10 @@ class Chart(object):
 
     # URL generation
     # -------------------------------------------------------------------------
-        
+
     def get_url(self, data_class=None):
         return self.BASE_URL + '?' + self.get_url_extension(data_class)
-    
+
     def get_url_extension(self, data_class=None):
         url_bits = self.get_url_bits(data_class=data_class)
         return '&'.join(url_bits)
@@ -366,8 +362,7 @@ class Chart(object):
         if self.title:
             url_bits.append('chtt=%s' % self.title)
         if self.title_colour and self.title_font_size:
-            url_bits.append('chts=%s,%s' % (self.title_colour, \
-                self.title_font_size))
+            url_bits.append('chts=%s,%s' % (self.title_colour, self.title_font_size))
         if self.legend:
             url_bits.append('chdl=%s' % '%7c'.join(self.legend))
         if self.legend_position:
@@ -381,16 +376,16 @@ class Chart(object):
             url_bits.append(ret)
         ret = self.axis_to_url()
         if ret:
-            url_bits.append(ret)                    
+            url_bits.append(ret)
         if self.markers:
-            url_bits.append(self.markers_to_url())        
+            url_bits.append(self.markers_to_url())
         if self.line_styles:
             style = []
             for index in range(max(self.line_styles) + 1):
                 if index in self.line_styles:
                     values = self.line_styles[index]
                 else:
-                    values = ('1', )
+                    values = ('1',)
                 style.append(','.join(values))
             url_bits.append('chls=%s' % '%7c'.join(style))
         if self.grid:
@@ -407,8 +402,9 @@ class Chart(object):
             opener = urlopen(self.get_url())
 
         if opener.headers['content-type'] != 'image/png':
-            raise BadContentTypeException('Server responded with a ' \
-                'content-type of %s' % opener.headers['content-type'])
+            raise BadContentTypeException(
+                'Server responded with a ' 'content-type of %s' % opener.headers['content-type']
+            )
         if file_name:
             open(file_name, 'wb').write(opener.read())
         else:
@@ -433,8 +429,7 @@ class Chart(object):
 
     def set_legend(self, legend):
         """legend needs to be a list, tuple or None"""
-        assert(isinstance(legend, list) or isinstance(legend, tuple) or
-            legend is None)
+        assert isinstance(legend, list) or isinstance(legend, tuple) or legend is None
         if legend:
             self.legend = [quote(a) for a in legend]
         else:
@@ -452,7 +447,7 @@ class Chart(object):
         """
         if legend_position:
             self.legend_position = quote(legend_position)
-        else:    
+        else:
             self.legend_position = None
 
     # Chart colours
@@ -460,8 +455,7 @@ class Chart(object):
 
     def set_colours(self, colours):
         # colours needs to be a list, tuple or None
-        assert(isinstance(colours, list) or isinstance(colours, tuple) or
-            colours is None)
+        assert isinstance(colours, list) or isinstance(colours, tuple) or colours is None
         # make sure the colours are in the right format
         if colours:
             for col in colours:
@@ -470,44 +464,43 @@ class Chart(object):
 
     def set_colours_within_series(self, colours):
         # colours needs to be a list, tuple or None
-        assert(isinstance(colours, list) or isinstance(colours, tuple) or
-            colours is None)
+        assert isinstance(colours, list) or isinstance(colours, tuple) or colours is None
         # make sure the colours are in the right format
         if colours:
             for col in colours:
                 _check_colour(col)
-        self.colours_within_series = colours        
+        self.colours_within_series = colours
 
     # Background/Chart colours
     # -------------------------------------------------------------------------
 
     def fill_solid(self, area, colour):
-        assert(area in Chart.VALID_SOLID_FILL_TYPES)
+        assert area in Chart.VALID_SOLID_FILL_TYPES
         _check_colour(colour)
         self.fill_area[area] = colour
         self.fill_types[area] = Chart.SOLID
 
     def _check_fill_linear(self, angle, *args):
-        assert(isinstance(args, list) or isinstance(args, tuple))
-        assert(angle >= 0 and angle <= 90)
-        assert(len(args) % 2 == 0)
+        assert isinstance(args, list) or isinstance(args, tuple)
+        assert angle >= 0 and angle <= 90
+        assert len(args) % 2 == 0
         args = list(args)  # args is probably a tuple and we need to mutate
         for a in range(int(len(args) / 2)):
             col = args[a * 2]
             offset = args[a * 2 + 1]
             _check_colour(col)
-            assert(offset >= 0 and offset <= 1)
+            assert offset >= 0 and offset <= 1
             args[a * 2 + 1] = str(args[a * 2 + 1])
         return args
 
     def fill_linear_gradient(self, area, angle, *args):
-        assert(area in Chart.VALID_SOLID_FILL_TYPES)
+        assert area in Chart.VALID_SOLID_FILL_TYPES
         args = self._check_fill_linear(angle, *args)
         self.fill_types[area] = Chart.LINEAR_GRADIENT
         self.fill_area[area] = ','.join([str(angle)] + args)
 
     def fill_linear_stripes(self, area, angle, *args):
-        assert(area in Chart.VALID_SOLID_FILL_TYPES)
+        assert area in Chart.VALID_SOLID_FILL_TYPES
         args = self._check_fill_linear(angle, *args)
         self.fill_types[area] = Chart.LINEAR_STRIPES
         self.fill_area[area] = ','.join([str(angle)] + args)
@@ -516,8 +509,7 @@ class Chart(object):
         areas = []
         for area in (Chart.BACKGROUND, Chart.CHART, Chart.ALPHA):
             if self.fill_types[area]:
-                areas.append('%s,%s,%s' % (area, self.fill_types[area], \
-                    self.fill_area[area]))
+                areas.append('%s,%s,%s' % (area, self.fill_types[area], self.fill_area[area]))
         if areas:
             return 'chf=' + '%7c'.join(areas)
 
@@ -528,7 +520,7 @@ class Chart(object):
         """Determines the appropriate data encoding type to give satisfactory
         resolution (http://code.google.com/apis/chart/#chart_data).
         """
-        assert(isinstance(data, list) or isinstance(data, tuple))
+        assert isinstance(data, list) or isinstance(data, tuple)
         if not isinstance(self, (LineChart, BarChart, ScatterChart)):
             # From the link above:
             #   Simple encoding is suitable for all other types of chart
@@ -551,30 +543,30 @@ class Chart(object):
         data range.
         """
         try:
-            lower = min([min(self._filter_none(s))
-                         for type, s in self.annotated_data()
-                         if type == 'x'])
-            upper = max([max(self._filter_none(s))
-                         for type, s in self.annotated_data()
-                         if type == 'x'])
+            lower = min(
+                [min(self._filter_none(s)) for type, s in self.annotated_data() if type == 'x']
+            )
+            upper = max(
+                [max(self._filter_none(s)) for type, s in self.annotated_data() if type == 'x']
+            )
             return (lower, upper)
         except ValueError:
-            return None     # no x-axis datasets
+            return None  # no x-axis datasets
 
     def data_y_range(self):
         """Return a 2-tuple giving the minimum and maximum y-axis
         data range.
         """
         try:
-            lower = min([min(self._filter_none(s))
-                         for type, s in self.annotated_data()
-                         if type == 'y'])
-            upper = max([max(self._filter_none(s)) + 1
-                         for type, s in self.annotated_data()
-                         if type == 'y'])
+            lower = min(
+                [min(self._filter_none(s)) for type, s in self.annotated_data() if type == 'y']
+            )
+            upper = max(
+                [max(self._filter_none(s)) + 1 for type, s in self.annotated_data() if type == 'y']
+            )
             return (lower, upper)
         except ValueError:
-            return None     # no y-axis datasets
+            return None  # no y-axis datasets
 
     def scaled_data(self, data_class, x_range=None, y_range=None):
         """Scale `self.data` as appropriate for the given data encoding
@@ -619,8 +611,7 @@ class Chart(object):
                 if v is None:
                     scaled_dataset.append(None)
                 else:
-                    scaled_dataset.append(
-                        data_class.scale_value(v, scale_range))
+                    scaled_dataset.append(data_class.scale_value(v, scale_range))
             scaled_data.append(scaled_dataset)
         return scaled_data
 
@@ -647,7 +638,7 @@ class Chart(object):
     # -------------------------------------------------------------------------
 
     def set_axis_labels(self, axis_type, values):
-        assert(axis_type in Axis.TYPES)
+        assert axis_type in Axis.TYPES
         values = [quote(str(a)) for a in values]
         axis_index = len(self.axis)
         axis = LabelAxis(axis_index, axis_type, values)
@@ -655,7 +646,7 @@ class Chart(object):
         return axis_index
 
     def set_axis_range(self, axis_type, low, high):
-        assert(axis_type in Axis.TYPES)
+        assert axis_type in Axis.TYPES
         axis_index = len(self.axis)
         axis = RangeAxis(axis_index, axis_type, low, high)
         self.axis.append(axis)
@@ -665,16 +656,13 @@ class Chart(object):
         try:
             self.axis[axis_index].set_positions(positions)
         except IndexError:
-            raise InvalidParametersException('Axis index %i has not been ' \
-                'created' % axis)
+            raise InvalidParametersException('Axis index %i has not been ' 'created' % axis)
 
-    def set_axis_style(self, axis_index, colour, font_size=None, \
-            alignment=None):
+    def set_axis_style(self, axis_index, colour, font_size=None, alignment=None):
         try:
             self.axis[axis_index].set_style(colour, font_size, alignment)
         except IndexError:
-            raise InvalidParametersException('Axis index %i has not been ' \
-                'created' % axis)
+            raise InvalidParametersException('Axis index %i has not been ' 'created' % axis)
 
     def axis_to_url(self):
         available_axis = []
@@ -710,31 +698,28 @@ class Chart(object):
     # Markers, Ranges and Fill area (chm)
     # -------------------------------------------------------------------------
 
-    def markers_to_url(self):        
+    def markers_to_url(self):
         return 'chm=%s' % '%7c'.join([','.join(a) for a in self.markers])
 
     def add_marker(self, index, point, marker_type, colour, size, priority=0):
-        self.markers.append((marker_type, colour, str(index), str(point), \
-            str(size), str(priority)))
+        self.markers.append((marker_type, colour, str(index), str(point), str(size), str(priority)))
 
     def add_horizontal_range(self, colour, start, stop):
         self.markers.append(('r', colour, '0', str(start), str(stop)))
 
     def add_data_line(self, colour, data_set, size, priority=0):
-        self.markers.append(('D', colour, str(data_set), '0', str(size), \
-            str(priority)))
+        self.markers.append(('D', colour, str(data_set), '0', str(size), str(priority)))
 
-    def add_marker_text(self, string, colour, data_set, data_point, size, \
-            priority=0):
-        self.markers.append((str(string), colour, str(data_set), \
-            str(data_point), str(size), str(priority)))        
+    def add_marker_text(self, string, colour, data_set, data_point, size, priority=0):
+        self.markers.append(
+            (str(string), colour, str(data_set), str(data_point), str(size), str(priority))
+        )
 
     def add_vertical_range(self, colour, start, stop):
         self.markers.append(('R', colour, '0', str(start), str(stop)))
 
     def add_fill_range(self, colour, index_start, index_end):
-        self.markers.append(('b', colour, str(index_start), str(index_end), \
-            '1'))
+        self.markers.append(('b', colour, str(index_start), str(index_end), '1'))
 
     def add_fill_simple(self, colour):
         self.markers.append(('B', colour, '1', '1', '1'))
@@ -742,8 +727,7 @@ class Chart(object):
     # Line styles
     # -------------------------------------------------------------------------
 
-    def set_line_style(self, index, thickness=1, line_segment=None, \
-            blank_segment=None):
+    def set_line_style(self, index, thickness=1, line_segment=None, blank_segment=None):
         value = []
         value.append(str(thickness))
         if line_segment:
@@ -754,14 +738,11 @@ class Chart(object):
     # Grid
     # -------------------------------------------------------------------------
 
-    def set_grid(self, x_step, y_step, line_segment=1, \
-            blank_segment=0):
-        self.grid = '%s,%s,%s,%s' % (x_step, y_step, line_segment, \
-            blank_segment)
+    def set_grid(self, x_step, y_step, line_segment=1, blank_segment=0):
+        self.grid = '%s,%s,%s,%s' % (x_step, y_step, line_segment, blank_segment)
 
 
 class ScatterChart(Chart):
-
     def type_to_url(self):
         return 'cht=s'
 
@@ -775,7 +756,6 @@ class ScatterChart(Chart):
 
 
 class LineChart(Chart):
-
     def __init__(self, *args, **kwargs):
         if type(self) == LineChart:
             raise AbstractClassException('This is an abstract class')
@@ -783,7 +763,6 @@ class LineChart(Chart):
 
 
 class SimpleLineChart(LineChart):
-
     def type_to_url(self):
         return 'cht=lc'
 
@@ -794,13 +773,11 @@ class SimpleLineChart(LineChart):
 
 
 class SparkLineChart(SimpleLineChart):
-
     def type_to_url(self):
         return 'cht=ls'
 
 
 class XYLineChart(LineChart):
-
     def type_to_url(self):
         return 'cht=lxy'
 
@@ -814,7 +791,6 @@ class XYLineChart(LineChart):
 
 
 class BarChart(Chart):
-
     def __init__(self, *args, **kwargs):
         if type(self) == BarChart:
             raise AbstractClassException('This is an abstract class')
@@ -844,13 +820,11 @@ class BarChart(Chart):
 
 
 class StackedHorizontalBarChart(BarChart):
-
     def type_to_url(self):
         return 'cht=bhs'
 
 
 class StackedVerticalBarChart(BarChart):
-
     def type_to_url(self):
         return 'cht=bvs'
 
@@ -860,7 +834,6 @@ class StackedVerticalBarChart(BarChart):
 
 
 class GroupedBarChart(BarChart):
-
     def __init__(self, *args, **kwargs):
         if type(self) == GroupedBarChart:
             raise AbstractClassException('This is an abstract class')
@@ -879,21 +852,24 @@ class GroupedBarChart(BarChart):
     def get_url_bits(self, data_class=None):
         # Skip 'BarChart.get_url_bits' and call Chart directly so the parent
         # doesn't add "chbh" before we do.
-        url_bits = BarChart.get_url_bits(self, data_class=data_class,
-            skip_chbh=True)
+        url_bits = BarChart.get_url_bits(self, data_class=data_class, skip_chbh=True)
         if self.group_spacing is not None:
             if self.bar_spacing is None:
-                raise InvalidParametersException('Bar spacing is required ' \
-                    'to be set when setting group spacing')
+                raise InvalidParametersException(
+                    'Bar spacing is required ' 'to be set when setting group spacing'
+                )
             if self.bar_width is None:
-                raise InvalidParametersException('Bar width is required to ' \
-                    'be set when setting bar spacing')
-            url_bits.append('chbh=%i,%i,%i'
-                % (self.bar_width, self.bar_spacing, self.group_spacing))
+                raise InvalidParametersException(
+                    'Bar width is required to ' 'be set when setting bar spacing'
+                )
+            url_bits.append(
+                'chbh=%i,%i,%i' % (self.bar_width, self.bar_spacing, self.group_spacing)
+            )
         elif self.bar_spacing is not None:
             if self.bar_width is None:
-                raise InvalidParametersException('Bar width is required to ' \
-                    'be set when setting bar spacing')
+                raise InvalidParametersException(
+                    'Bar width is required to ' 'be set when setting bar spacing'
+                )
             url_bits.append('chbh=%i,%i' % (self.bar_width, self.bar_spacing))
         elif self.bar_width:
             url_bits.append('chbh=%i' % self.bar_width)
@@ -901,13 +877,11 @@ class GroupedBarChart(BarChart):
 
 
 class GroupedHorizontalBarChart(GroupedBarChart):
-
     def type_to_url(self):
         return 'cht=bhg'
 
 
 class GroupedVerticalBarChart(GroupedBarChart):
-
     def type_to_url(self):
         return 'cht=bvg'
 
@@ -917,15 +891,13 @@ class GroupedVerticalBarChart(GroupedBarChart):
 
 
 class PieChart(Chart):
-
     def __init__(self, *args, **kwargs):
         if type(self) == PieChart:
             raise AbstractClassException('This is an abstract class')
         Chart.__init__(self, *args, **kwargs)
         self.pie_labels = []
         if self.y_range:
-            warnings.warn('y_range is not used with %s.' % \
-                (self.__class__.__name__))
+            warnings.warn('y_range is not used with %s.' % (self.__class__.__name__))
 
     def set_pie_labels(self, labels):
         self.pie_labels = [quote(a) for a in labels]
@@ -949,19 +921,16 @@ class PieChart(Chart):
 
 
 class PieChart2D(PieChart):
-
     def type_to_url(self):
         return 'cht=p'
 
 
 class PieChart3D(PieChart):
-
     def type_to_url(self):
         return 'cht=p3'
 
 
 class VennChart(Chart):
-
     def type_to_url(self):
         return 'cht=v'
 
@@ -971,75 +940,295 @@ class VennChart(Chart):
 
 
 class RadarChart(Chart):
-
     def type_to_url(self):
         return 'cht=r'
 
 
 class SplineRadarChart(RadarChart):
-
     def type_to_url(self):
         return 'cht=rs'
 
 
 class MapChart(Chart):
-
     def __init__(self, *args, **kwargs):
         Chart.__init__(self, *args, **kwargs)
         self.geo_area = 'world'
         self.codes = []
-        self.__areas = ('africa', 'asia', 'europe', 'middle_east',
-            'south_america', 'usa', 'world')
+        self.__areas = ('africa', 'asia', 'europe', 'middle_east', 'south_america', 'usa', 'world')
         self.__ccodes = (
-            'AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AN', 'AO', 'AQ', 'AR',
-            'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF',
-            'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BR', 'BS', 'BT',
-            'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI',
-            'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CX', 'CY', 'CZ',
-            'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER',
-            'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD',
-            'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR',
-            'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU',
-            'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE',
-            'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR',
-            'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT',
-            'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK',
-            'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV',
-            'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL',
-            'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH',
-            'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE',
-            'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH',
-            'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'ST', 'SV', 'SY',
-            'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN',
-            'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY',
-            'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE',
-            'YT', 'ZA', 'ZM', 'ZW')
-        
+            'AD',
+            'AE',
+            'AF',
+            'AG',
+            'AI',
+            'AL',
+            'AM',
+            'AN',
+            'AO',
+            'AQ',
+            'AR',
+            'AS',
+            'AT',
+            'AU',
+            'AW',
+            'AX',
+            'AZ',
+            'BA',
+            'BB',
+            'BD',
+            'BE',
+            'BF',
+            'BG',
+            'BH',
+            'BI',
+            'BJ',
+            'BL',
+            'BM',
+            'BN',
+            'BO',
+            'BR',
+            'BS',
+            'BT',
+            'BV',
+            'BW',
+            'BY',
+            'BZ',
+            'CA',
+            'CC',
+            'CD',
+            'CF',
+            'CG',
+            'CH',
+            'CI',
+            'CK',
+            'CL',
+            'CM',
+            'CN',
+            'CO',
+            'CR',
+            'CU',
+            'CV',
+            'CX',
+            'CY',
+            'CZ',
+            'DE',
+            'DJ',
+            'DK',
+            'DM',
+            'DO',
+            'DZ',
+            'EC',
+            'EE',
+            'EG',
+            'EH',
+            'ER',
+            'ES',
+            'ET',
+            'FI',
+            'FJ',
+            'FK',
+            'FM',
+            'FO',
+            'FR',
+            'GA',
+            'GB',
+            'GD',
+            'GE',
+            'GF',
+            'GG',
+            'GH',
+            'GI',
+            'GL',
+            'GM',
+            'GN',
+            'GP',
+            'GQ',
+            'GR',
+            'GS',
+            'GT',
+            'GU',
+            'GW',
+            'GY',
+            'HK',
+            'HM',
+            'HN',
+            'HR',
+            'HT',
+            'HU',
+            'ID',
+            'IE',
+            'IL',
+            'IM',
+            'IN',
+            'IO',
+            'IQ',
+            'IR',
+            'IS',
+            'IT',
+            'JE',
+            'JM',
+            'JO',
+            'JP',
+            'KE',
+            'KG',
+            'KH',
+            'KI',
+            'KM',
+            'KN',
+            'KP',
+            'KR',
+            'KW',
+            'KY',
+            'KZ',
+            'LA',
+            'LB',
+            'LC',
+            'LI',
+            'LK',
+            'LR',
+            'LS',
+            'LT',
+            'LU',
+            'LV',
+            'LY',
+            'MA',
+            'MC',
+            'MD',
+            'ME',
+            'MF',
+            'MG',
+            'MH',
+            'MK',
+            'ML',
+            'MM',
+            'MN',
+            'MO',
+            'MP',
+            'MQ',
+            'MR',
+            'MS',
+            'MT',
+            'MU',
+            'MV',
+            'MW',
+            'MX',
+            'MY',
+            'MZ',
+            'NA',
+            'NC',
+            'NE',
+            'NF',
+            'NG',
+            'NI',
+            'NL',
+            'NO',
+            'NP',
+            'NR',
+            'NU',
+            'NZ',
+            'OM',
+            'PA',
+            'PE',
+            'PF',
+            'PG',
+            'PH',
+            'PK',
+            'PL',
+            'PM',
+            'PN',
+            'PR',
+            'PS',
+            'PT',
+            'PW',
+            'PY',
+            'QA',
+            'RE',
+            'RO',
+            'RS',
+            'RU',
+            'RW',
+            'SA',
+            'SB',
+            'SC',
+            'SD',
+            'SE',
+            'SG',
+            'SH',
+            'SI',
+            'SJ',
+            'SK',
+            'SL',
+            'SM',
+            'SN',
+            'SO',
+            'SR',
+            'ST',
+            'SV',
+            'SY',
+            'SZ',
+            'TC',
+            'TD',
+            'TF',
+            'TG',
+            'TH',
+            'TJ',
+            'TK',
+            'TL',
+            'TM',
+            'TN',
+            'TO',
+            'TR',
+            'TT',
+            'TV',
+            'TW',
+            'TZ',
+            'UA',
+            'UG',
+            'UM',
+            'US',
+            'UY',
+            'UZ',
+            'VA',
+            'VC',
+            'VE',
+            'VG',
+            'VI',
+            'VN',
+            'VU',
+            'WF',
+            'WS',
+            'YE',
+            'YT',
+            'ZA',
+            'ZM',
+            'ZW',
+        )
+
     def type_to_url(self):
         return 'cht=t'
 
     def set_codes(self, codes):
-        '''Set the country code map for the data.
+        """Set the country code map for the data.
         Codes given in a list.
 
         i.e. DE - Germany
              AT - Austria
              US - United States
-        '''
+        """
 
         codemap = ''
-        
+
         for cc in codes:
             cc = cc.upper()
             if cc in self.__ccodes:
                 codemap += cc
             else:
                 raise UnknownCountryCodeException(cc)
-            
+
         self.codes = codemap
 
     def set_geo_area(self, area):
-        '''Sets the geo area for the map.
+        """Sets the geo area for the map.
 
         * africa
         * asia
@@ -1048,12 +1237,12 @@ class MapChart(Chart):
         * south_america
         * usa
         * world
-        '''
-        
+        """
+
         if area in self.__areas:
             self.geo_area = area
         else:
-            raise UnknownChartType('Unknown chart type for maps: %s' %area)
+            raise UnknownChartType('Unknown chart type for maps: %s' % area)
 
     def get_url_bits(self, data_class=None):
         url_bits = Chart.get_url_bits(self, data_class=data_class)
@@ -1063,10 +1252,10 @@ class MapChart(Chart):
         return url_bits
 
     def add_data_dict(self, datadict):
-        '''Sets the data and country codes via a dictionary.
+        """Sets the data and country codes via a dictionary.
 
         i.e. {'DE': 50, 'GB': 30, 'AT': 70}
-        '''
+        """
 
         self.set_codes(list(datadict.keys()))
         self.add_data(list(datadict.values()))
@@ -1078,15 +1267,16 @@ class GoogleOMeterChart(PieChart):
     def __init__(self, *args, **kwargs):
         PieChart.__init__(self, *args, **kwargs)
         if self.auto_scale and not self.x_range:
-            warnings.warn('Please specify an x_range with GoogleOMeterChart, '
-                'otherwise one arrow will always be at the max.')
+            warnings.warn(
+                'Please specify an x_range with GoogleOMeterChart, '
+                'otherwise one arrow will always be at the max.'
+            )
 
     def type_to_url(self):
         return 'cht=gom'
 
 
 class QRChart(Chart):
-
     def __init__(self, *args, **kwargs):
         Chart.__init__(self, *args, **kwargs)
         self.encoding = None
@@ -1118,7 +1308,6 @@ class QRChart(Chart):
 
 
 class ChartGrammar(object):
-
     def __init__(self):
         self.grammar = None
         self.chart = None
@@ -1161,10 +1350,10 @@ class ChartGrammar(object):
     def create_chart_instance(self, grammar=None):
         if not grammar:
             grammar = self.grammar
-        assert(isinstance(grammar, dict))  # grammar must be a dict
-        assert('w' in grammar)  # width is required
-        assert('h' in grammar)  # height is required
-        assert('type' in grammar)  # type is required
+        assert isinstance(grammar, dict)  # grammar must be a dict
+        assert 'w' in grammar  # width is required
+        assert 'h' in grammar  # height is required
+        assert 'type' in grammar  # type is required
         chart_type = grammar['type']
         w = grammar['w']
         h = grammar['h']
@@ -1173,11 +1362,13 @@ class ChartGrammar(object):
         y_range = grammar.get('y_range', None)
         types = ChartGrammar.get_possible_chart_types()
         if chart_type not in types:
-            raise UnknownChartType('%s is an unknown chart type. Possible '
-                'chart types are %s' % (chart_type, ','.join(types)))
-        return globals()[chart_type + 'Chart'](w, h, auto_scale=auto_scale,
-            x_range=x_range, y_range=y_range)
+            raise UnknownChartType(
+                '%s is an unknown chart type. Possible '
+                'chart types are %s' % (chart_type, ','.join(types))
+            )
+        return globals()[chart_type + 'Chart'](
+            w, h, auto_scale=auto_scale, x_range=x_range, y_range=y_range
+        )
 
     def download(self):
         pass
-

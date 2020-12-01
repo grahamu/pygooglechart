@@ -6,11 +6,6 @@ import sys
 import os
 import warnings
 
-try:
-	import urllib.request, urllib.parse, urllib.error
-except ImportError:
-	import urllib2
-
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, ROOT)
 
@@ -18,7 +13,6 @@ import pygooglechart as gc
 
 
 class TestBase(unittest.TestCase):
-
     def setUp(self):
 
         # All tests require warnings to be raised
@@ -42,6 +36,3 @@ class TestBase(unittest.TestCase):
 
     def assertChartURL(self, url, query):
         self.assertTrue(url.endswith(query))
-
-
-

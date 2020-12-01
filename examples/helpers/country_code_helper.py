@@ -14,7 +14,7 @@ class CountryCodes:
     def get_country_code_from_name(self, guess_name):
         best_score = 100
         best_code = None
-        for code, name in self.codes.items():
+        for code, name in list(self.codes.items()):
             score = self.levenshtein(guess_name, name)
             if score < best_score:
                 best_score = score
@@ -29,7 +29,7 @@ class CountryCodes:
             a,b = b,a
             n,m = m,n
             
-        current = range(n+1)
+        current = list(range(n+1))
         for i in range(1,m+1):
             previous, current = current, [i]+[0]*n
             for j in range(1,n+1):

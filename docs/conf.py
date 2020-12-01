@@ -41,8 +41,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Python Google Chart'
-copyright = u'2012, Geremy Condra, Rick van Hattem'
+project = 'Python Google Chart'
+copyright = '2012, Geremy Condra, Rick van Hattem'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -184,8 +184,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'PythonGoogleChart.tex', u'Python Google Chart Documentation',
-   u'Geremy Condra, Rick van Hattem', 'manual'),
+  ('index', 'PythonGoogleChart.tex', 'Python Google Chart Documentation',
+   'Geremy Condra, Rick van Hattem', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -214,8 +214,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pythongooglechart', u'Python Google Chart Documentation',
-     [u'Geremy Condra, Rick van Hattem'], 1)
+    ('index', 'pythongooglechart', 'Python Google Chart Documentation',
+     ['Geremy Condra, Rick van Hattem'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -228,8 +228,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'PythonGoogleChart', u'Python Google Chart Documentation',
-   u'Geremy Condra, Rick van Hattem', 'PythonGoogleChart', 'One line description of project.',
+  ('index', 'PythonGoogleChart', 'Python Google Chart Documentation',
+   'Geremy Condra, Rick van Hattem', 'PythonGoogleChart', 'One line description of project.',
    'Miscellaneous'),
 ]
 
